@@ -1,0 +1,332 @@
+---
+title: "Client Report - Project 5: The war with Star Wars"
+subtitle: "Course DS 250"
+author: "Max Smith"
+format:
+  html:
+    self-contained: true
+    page-layout: full
+    title-block-banner: true
+    toc: true
+    toc-depth: 3
+    toc-location: body
+    number-sections: false
+    html-math-method: katex
+    code-fold: true
+    code-summary: "Show the code"
+    code-overflow: wrap
+    code-copy: hover
+    code-tools:
+        source: false
+        toggle: true
+        caption: See code
+execute: 
+  warning: false
+    
+---
+
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from sklearn.tree import DecisionTreeClassifier # Import Decision Tree Classifier
+from sklearn import metrics #Import scikit-learn metrics module for accuracy calculation
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.linear_model import LogisticRegression
+
+
+```
+
+
+## Elevator pitch
+
+In this analysis we are taking a look into survey data gathered on star wars from the public. A lot of analysis and data cleaning was done on this data to turn the survey data with long questions as headers, into a machine learning data frame. In this we take a look at how we made the data easier to read, a couple graphics from the data like which star wars movie was the most seen, and a machine learning system that acheives a 74% accuracy.
+
+```{python}
+#| label: project-data
+#| code-summary: Read and format project data
+
+# Learn morea about Code Cells: https://quarto.org/docs/reference/cells/cells-jupyter.html
+
+# Include and execute your code here
+df = pd.read_csv('/Users/maxsmith/Desktop/DS 250/week-9/StarWars.csv', encoding='ISO-8859-1')
+```
+
+__Highlight the Questions and Tasks__
+
+## QUESTION|TASK 1
+
+Shorten the column names and clean them up for easier use with pandas. Provide a table or list that exemplifies how you fixed the names.
+
+Here I was able to change the super long header questions to more concise headers with no spaces but underscores. Here is a list of the new column names.
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+# Include and execute your code here
+
+df.columns = [
+    'respondent_id',
+    'seen_any_star_wars_films',
+    'star_wars_fan',
+    'seen_episode_1_phantom_menace',
+    'seen_episode_2_attack_of_clones',
+    'seen_episode_3_revenge_of_sith',
+    'seen_episode_4_new_hope',
+    'seen_episode_5_empire_strikes_back',
+    'seen_episode_6_return_of_jedi',
+    'rank_episode_1_phantom_menace',
+    'rank_episode_2_attack_of_clones',
+    'rank_episode_3_revenge_of_sith',
+    'rank_episode_4_new_hope',
+    'rank_episode_5_empire_strikes_back',
+    'rank_episode_6_return_of_jedi',
+    'opinion_han_solo',
+    'opinion_luke_skywalker',
+    'opinion_princess_leia_organa',
+    'opinion_anakin_skywalker',
+    'opinion_obi_wan_kenobi',
+    'opinion_emperor_palpatine',
+    'opinion_darth_vader',
+    'opinion_lando_calrissian',
+    'opinion_boba_fett',
+    'opinion_c3po',
+    'opinion_r2d2',
+    'opinion_jar_jar_binks',
+    'opinion_padme_amidala',
+    'opinion_yoda',
+    'who_shot_first',
+    'familiar_with_expanded_universe',
+    'fan_of_expanded_universe',
+    'fan_of_star_trek',
+    'gender',
+    'age',
+    'household_income',
+    'education',
+    'location'
+]
+
+df = df.drop(index=0)
+df.reset_index(drop=True, inplace=True)
+
+df.columns
+
+```
+
+
+## QUESTION|TASK 2
+
+Clean and format the data so that it can be used in a machine learning model. As you format the data, you should complete each item listed below. In your final report provide example(s) of the reformatted data with a short description of the changes made.
+a. Filter the dataset to respondents that have seen at least one film.
+b. Create a new column that converts the age ranges to a single number. Drop the age range categorical column.
+c. Create a new column that converts the education groupings to a single number. Drop the school categorical column
+d. Create a new column that converts the income ranges to a single number. Drop the income range categorical column.
+e. Create your target (also known as “y” or “label”) column based on the new income range column.
+f. One-hot encode all remaining categorical columns.
+
+In this task I was able to convert the values in different columns to make them useable in machine learning. For example, I made category values for range values like in age and income, so the maching can use a number value from 0-3 for example. Also I one-hot encoded the rest of the columns that werent a numeric range.
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+# Include and execute your code here
+
+# Part A
+# df['seen_any_star_wars_films'].unique()
+df_filtered = df[df['seen_any_star_wars_films'] == 'Yes']
+
+# Part B
+# df['age'].unique()
+age_mapping = {
+    '18-29': 0,
+    '30-44': 1,
+    '45-60': 2,
+    '60+': 3
+}
+
+df_filtered['age_ml'] = df_filtered['age'].map(age_mapping)
+
+df_filtered.drop('age', axis=1, inplace=True)
+
+df_filtered
+
+# Part C
+# df['education'].unique()
+education_mapping = {
+    'Less than high school degree': 0,
+    'High school degree': 1,
+    'Some college or Associate degree': 2,
+    'Bachelor degree': 3,
+    'Graduate degree': 4
+}
+
+df_filtered['education_ml'] = df_filtered['education'].map(education_mapping)
+
+df_filtered.drop('education', axis=1, inplace=True)
+
+# Part D
+# df['household_income'].unique()
+income_ordinal_mapping = {
+    '$0 - $24,999': 0,
+    '$25,000 - $49,999': 1,
+    '$50,000 - $99,999': 2,
+    '$100,000 - $149,999': 3,
+    '$150,000+': 4
+}
+
+df_filtered['income_ml'] = df_filtered['household_income'].map(income_ordinal_mapping)
+
+df_filtered.drop('household_income', axis=1, inplace=True)
+
+# Part E
+y = (df_filtered['income_ml'] > 2).astype(int)
+
+
+# Part F
+df_features = df_filtered.drop(['income_ml'], axis=1)
+
+df_ml = pd.get_dummies(df_features, drop_first=True)
+
+
+```
+
+_include figures in chunks and discuss your findings in the figure._
+
+## QUESTION|TASK 3
+
+Validate that the data provided on GitHub lines up with the article by recreating 2 of the visuals from the article.
+
+I recreated the chart that compares the percentage of seen star wars movies to each other, and a graph that shows the movies ranks. While I wasn't able tp get my numbers exactly right, I did make the graphs very similar, and can see the results. 
+```{python}
+#| label: Q3a
+#| code-summary: Read and format data
+# Include and execute your code here
+
+movies_columns = ['seen_episode_1_phantom_menace',         'seen_episode_2_attack_of_clones',
+'seen_episode_3_revenge_of_sith', 
+'seen_episode_4_new_hope',
+'seen_episode_5_empire_strikes_back', 'seen_episode_6_return_of_jedi']
+
+movies_seen_percentages = df_filtered[movies_columns].notnull().mean() * 100
+
+df_movies_seen = pd.DataFrame({
+    'Movie': ['Episode I The Phantom Menace', 
+    'Episode II Attack of the Clones',
+    'Episode III Revenge of the Sith', 
+    'Episode IV A New Hope',
+    'Episode V The Empire Strikes Back', 
+    'Episode VI Return of the Jedi'],
+    'Percentage Seen': movies_seen_percentages.values.round(0)
+})
+
+
+```
+
+
+
+In this chart we can see that the fifth episode "The Empire Strikes Back" is the most watched movie with 81%, while the 3rd "Revenge of the Sith" is the least watched with 59%.
+
+```{python}
+#| label: Q3a-chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+
+fig = px.bar(df_movies_seen, y='Movie', x='Percentage Seen',
+    title="Which 'Star Wars' Movie Have You Seen?",
+    labels={'Percentage Seen': 'Percentage of Respondents (%)'},
+    orientation='h',
+    text='Percentage Seen',
+    category_orders={'Movie': movies_columns})
+
+fig.show()
+
+```
+
+```{python}
+#| label: Q3b
+#| code-summary: Read and format data
+# Include and execute your code here
+
+# List of columns to convert
+rank_columns = [
+    'rank_episode_1_phantom_menace', 'rank_episode_2_attack_of_clones',
+    'rank_episode_3_revenge_of_sith', 'rank_episode_4_new_hope',
+    'rank_episode_5_empire_strikes_back', 'rank_episode_6_return_of_jedi'
+]
+
+# Convert each column to numeric, using pd.to_numeric and .loc for safe operation
+for col in rank_columns:
+    df_filtered.loc[:, col] = pd.to_numeric(df_filtered[col], errors='coerce')
+
+average_ranks = df_filtered[rank_columns].mean()
+
+df_movies_ranks = pd.DataFrame({
+    'Movie': [
+        'The Phantom Menace', 'Attack of the Clones', 
+        'Revenge of the Sith', 'A New Hope', 
+        'The Empire Strikes Back', 'Return of the Jedi'
+    ],
+    'Average Rank': average_ranks.values
+})
+
+
+
+```
+
+In this chart we see the different ranks, I couldn't figure out how to get them to show the same data, but we can see that the average rank for 3 of them were 3 and the other 3 had a rank of 4, and the lower the rank the better.
+```{python}
+#| label: Q3b-chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+
+fig = px.bar(df_movies_ranks, x='Average Rank', y='Movie', orientation='h',
+    title="Star Wars Movies Ranked by Average Survey Rank",
+    labels={'Average Rank': 'Average Rank (Lower is Better)'},
+    text='Average Rank')
+
+# Show the plot
+fig.show()
+
+
+
+```
+
+
+## QUESTION|TASK 4
+
+Build a machine learning model that predicts whether a person makes more than $50k. Describe your model and report the accuracy.
+
+In this model we started with a Gaussian model, and had an accuracy of 74.19%. We then tried a random forest classifier, and ended with the same 74.19% even after changing trees and n estimators. Obviously 74% isn't as great as 90% accuracy, but it is still a pretty good model, and not a bad accuracy at all.
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+# Include and execute your code here
+
+X_train, X_test, y_train, y_test = train_test_split(df_ml, y, test_size=0.2, random_state=42)
+
+X_train_dropped = X_train.dropna()
+y_train_dropped = y_train.loc[X_train_dropped.index]
+
+X_test_dropped = X_test.dropna()
+y_test_dropped = y_test.loc[X_test_dropped.index]
+
+random_forest_model = RandomForestClassifier(n_estimators=200, random_state=50)
+
+random_forest_model.fit(X_train_dropped, y_train_dropped)
+
+rf_predictions = random_forest_model.predict(X_test_dropped)
+
+rf_accuracy = accuracy_score(y_test_dropped, rf_predictions)
+print(f"Random Forest Model Accuracy: {rf_accuracy * 100:.2f}%")
+
+```

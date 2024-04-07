@@ -1,0 +1,214 @@
+---
+title: "Client Report - [Insert Project Title]"
+subtitle: "Course DS 250"
+author: "[STUDENT NAME]"
+format:
+  html:
+    self-contained: true
+    page-layout: full
+    title-block-banner: true
+    toc: true
+    toc-depth: 3
+    toc-location: body
+    number-sections: false
+    html-math-method: katex
+    code-fold: true
+    code-summary: "Show the code"
+    code-overflow: wrap
+    code-copy: hover
+    code-tools:
+        source: false
+        toggle: true
+        caption: See code
+execute: 
+  warning: false
+    
+---
+
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd
+import numpy as np
+import plotly.express as px
+
+# the following for mac users ro download data through the Internet
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+```
+
+
+## Elevator pitch
+
+In this analysis you will find specific insights of my name, the name 'Brittany', biblical names, and even the affects a popular movie had on naming children. I have provided visuals to easily see the change in activity of all of these names over the years. I also have provided short analysis before each of the charts to help explain what is exactly going on in the graph. 
+
+```{python}
+#| label: project data
+#| code-summary: Read and format project data
+# Include and execute your code here
+df = pd.read_csv("https://raw.githubusercontent.com/byuidatascience/data4names/master/data-raw/names_year/names_year.csv")
+
+
+```
+
+__Highlight the Questions and Tasks__
+
+## QUESTION|TASK 1
+
+How does your name at your birth year compare to its use historically?
+
+It seems like my name 'Max' has never been more popular than during my lifetime. It looks like the name was on a downward trend until 1983 and the name became more and more popular. It even looked like my name was starting to decline in popularity, but the year before I was born it caught traction again in 1998.
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+# Include and execute your code here
+
+max_df = df.query('name == "Max"')
+
+```
+
+
+```{python}
+#| label: Q1 chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+max_chart = px.bar(max_df,
+    x='year',
+    y='Total',
+    title='The Name "Max"'
+)
+max_chart.add_vrect(x0=1999, x1=2016)
+
+max_chart.add_annotation(x=1999, y=3500,
+    text='My lifetime',
+    showarrow=True,
+    arrowhead=3,
+    arrowsize=2,
+    ax=-80,
+    ay=-10)
+
+max_chart.show()
+
+#max_utah = max_df['UT'].sum()
+#max_utah
+
+```
+
+
+
+## QUESTION|TASK 2
+
+If you talked to someone named Brittany on the phone, what is your guess of his or her age? What ages would you not guess?
+
+From the graph we can assume that Brittany is about 34 years old, give or take 5 years. Before/after that the amount of people named Brittany fell significantly. I would not guess that she was born before 1984 or after 1999.
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+# Include and execute your code here
+
+brittany_df = df.query('name == "Brittany"')
+
+
+#brittany_df['year'].median()
+#brittany_df['year'].mean()
+
+```
+
+
+```{python}
+#| label: Q2 chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+britt_chart = px.bar(brittany_df,
+    x="year", 
+    y="Total",
+    title='The Name "Brittany"'
+)
+britt_chart.show()
+```
+
+
+
+## QUESTION|TASK 3
+
+Mary, Martha, Peter, and Paul are all Christian names. From 1920 - 2000, compare the name usage of each of the four names. What trends do you notice?
+
+It seems like for all these biblical names, there is a significant fall off around the years 1954-1956 that has continued even until this day, just at a lesser rate. However all of the names seemed to peak right before the big decline in 1954-1956.
+
+```{python}
+#| label: Q3
+#| code-summary: Read and format data
+# Include and execute your code here
+
+christian_names = df.query('name=="Mary" or name=="Martha" or name=="Peter" or name=="Paul"')
+
+christian_names = christian_names.query('year >= 1920 and year <= 2000')
+
+```
+
+
+```{python}
+#| label: Q3 chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+christian_chart = px.line(christian_names,
+    x='year',
+    y='Total',
+    color='name',
+    title='Biblical Names'
+)
+christian_chart.show()
+```
+
+
+## QUESTION|TASK 4
+
+Think of a unique name from a famous movie. Plot the usage of that name and see how changes line up with the movie release. Does it look like the movie had an effect on usage?
+
+I analyzed the name 'Elsa' from the movie Frozen, which was released in 2013. We can see from this graph that it wasn't a very common name until the movie was released. There is a very steep incline following the release of the movie, showing that there is a direct relationship with the movie release and people naming their kids 'Elsa'.
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+# Include and execute your code here
+
+movie_name = df.query('name=="Elsa"')
+
+movie_name = movie_name.query('year >= 2000 and year <= 2023')
+
+```
+
+
+```{python}
+#| label: Q4 chart
+#| code-summary: plot example
+#| fig-cap: "My useless chart"
+#| fig-align: center
+# Include and execute your code here
+movie_chart = px.line(movie_name,
+    x='year',
+    y='Total',
+    color='name',
+    title='The Name "Elsa" from Frozen'
+)
+#movie_chart.add_vline(x=2013)
+
+movie_chart.add_annotation(x=2013, y=525,
+    text='"Frozen" Movie Release',
+    showarrow=True,
+    arrowhead=3,
+    arrowsize=2,
+    ax=-80,
+    ay=-80)
+
+movie_chart.show()
+```
+
